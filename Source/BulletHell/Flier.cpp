@@ -12,7 +12,7 @@ AFlier::AFlier() {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	CreateDefaultSubobject<UFloatingPawnMovement>("PawnMovement");
+	Movement = CreateDefaultSubobject<UFloatingPawnMovement>("PawnMovement");
 
 	CubeMesh = CreateDefaultSubobject<UStaticMeshComponent>("CubeMesh");
 
@@ -24,12 +24,24 @@ AFlier::AFlier() {
 
 	Slowdown = false;
 	SlowdownMultiplier = .5f;
+	FocusedFireMultiplier = .5f;
+
+	BaseSpeed = 1.f;
+
+	FireLevel = 0;
+
+	MaxFireLevel = 4;
 
 }
 
 // Called when the game starts or when spawned
 void AFlier::BeginPlay() {
 	Super::BeginPlay();
+
+	Movement->MaxSpeed *= BaseSpeed;
+
+	Movement->Acceleration = Movement->Deceleration = (float)INT_MAX;
+	Movement->TurningBoost = 0.f;
 
 	IsFiring = false;
 }
@@ -54,17 +66,20 @@ void AFlier::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) {
 
 	PlayerInputComponent->BindAction("Slowdown", EInputEvent::IE_Pressed, this, &AFlier::EnableSlowdown);
 	PlayerInputComponent->BindAction("Slowdown", EInputEvent::IE_Released, this, &AFlier::DisableSlowdown);
+
+	PlayerInputComponent->BindAction("DebugIncreaseFireLevel", EInputEvent::IE_Pressed, this, &AFlier::DEBUG_IncreaseFireLevel);
+	PlayerInputComponent->BindAction("DebugDecreaseFireLevel", EInputEvent::IE_Pressed, this, &AFlier::DEBUG_DecreaseFireLevel);
 }
 
 void AFlier::MoveForward(float Amount) {
 	if (Slowdown)
-		Amount *= SlowdownMultiplier;
+		Amount *= (1 - SlowdownMultiplier);
 	AddMovementInput(GetActorForwardVector(), Amount);
 }
 
 void AFlier::MoveRight(float Amount) {
 	if (Slowdown)
-		Amount *= SlowdownMultiplier;
+		Amount *= (1 - SlowdownMultiplier);
 	AddMovementInput(GetActorRightVector(), Amount);
 }
 
@@ -85,39 +100,99 @@ void AFlier::DisableSlowdown() {
 	Slowdown = false;
 }
 
-void AFlier::Fire() {
-	// TODO: Spawn Projectile
+void AFlier::DEBUG_IncreaseFireLevel() {
+	FireLevel++;
 
+	if (FireLevel > MaxFireLevel)
+		FireLevel = MaxFireLevel;
+
+	if (GEngine) {
+		FString Out = FString::FromInt(FireLevel);
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, *Out);
+	}
+}
+
+void AFlier::DEBUG_DecreaseFireLevel() {
+	FireLevel--;
+	
+	if (FireLevel < 0)
+		FireLevel = 0;
+
+	if (GEngine) {
+		FString Out = FString::FromInt(FireLevel);
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, *Out);
+	}
+}
+
+void AFlier::Fire(bool Homing) {
 	float CurrentTime = GetGameTimeSinceCreation();
 
 	if (CurrentTime > (LastFire + FireDelay)) {
-		if (GEngine) {
-			FString Out = "Fired at ";
-			FString GameTime = FString::SanitizeFloat(GetGameTimeSinceCreation());
-			Out.Append(*GameTime);
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, *Out);
-		}
 
 		FVector SpawnLocation = GetActorLocation();
 		FRotator SpawnRotation = GetActorRotation();
 
-		if (GEngine) {
-			FString Out = "Blep again.";
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, *Out);
-		}
-		if (ProjectileBlueprint) {
-			if (GEngine) {
-				FString Out = "Did we blep here?";
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, *Out);
+		if (Homing) {
+			if (HomingProjectileBlueprint) {
+				ABasicProjectile* SpawnedProjectile = (ABasicProjectile*)GetWorld()->SpawnActor<ABasicProjectile>(
+					HomingProjectileBlueprint,
+					SpawnLocation,
+					SpawnRotation
+				);
 			}
-			ABasicProjectile* SpawnedProjectile = (ABasicProjectile*)GetWorld()->SpawnActor<ABasicProjectile>(
-				ProjectileBlueprint,
-				SpawnLocation,
-				SpawnRotation
-			);
+		} else {
+			if (ProjectileBlueprint) {
+				ABasicProjectile* SpawnedProjectile = (ABasicProjectile*)GetWorld()->SpawnActor<ABasicProjectile>(
+					ProjectileBlueprint,
+					SpawnLocation,
+					SpawnRotation
+				);
+			}
+		}
+
+		if (FireLevel >= 1) {
+			SideFire(15.f, 50.f);
+		}
+
+		if (FireLevel >= 2) {
+			SideFire(7.5f, 25.f);
+			SideFire(22.5f, 75.f);
+		}
+
+		if (FireLevel >= 3) {
+			SideFire(30.f, 100.f);
+		}
+
+		if (FireLevel == 4) {
+			SideFire(90.f, 0.f, true);
 		}
 
 		LastFire = CurrentTime;
+	}
+}
+
+void AFlier::SideFire(float RotOffset, float PosOffset, bool Homing) {
+	FVector SpawnLocation = GetActorLocation();
+	FRotator SpawnRotation = GetActorRotation();
+
+	if (Homing ? HomingProjectileBlueprint : ProjectileBlueprint) {
+		SpawnLocation.Y -= PosOffset; // Spawn at left side
+		SpawnRotation.Yaw -= (RotOffset * (Slowdown ? (1.f - FocusedFireMultiplier) : 1.f)); // Rotate left
+
+		ABasicProjectile* SpawnedProjectileLeft = (ABasicProjectile*)GetWorld()->SpawnActor<ABasicProjectile>(
+			(Homing ? HomingProjectileBlueprint : ProjectileBlueprint),
+			SpawnLocation,
+			SpawnRotation
+		);
+
+		SpawnLocation.Y += (PosOffset * 2); // Counteract earlier subtraction
+		SpawnRotation.Yaw += ((RotOffset * 2) * (Slowdown ? (1.f - FocusedFireMultiplier) : 1.f)); // Rotate right, counteracting earlier
+
+		ABasicProjectile* SpawnedProjectileRight = (ABasicProjectile*)GetWorld()->SpawnActor<ABasicProjectile>(
+			(Homing ? HomingProjectileBlueprint : ProjectileBlueprint),
+			SpawnLocation,
+			SpawnRotation
+		);
 	}
 }
 

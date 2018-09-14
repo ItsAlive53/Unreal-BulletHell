@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/FloatingPawnMovement.h"
 #include "Engine.h"
 #include "BasicProjectile.h"
+#include "HomingProjectile.h"
 #include "Flier.generated.h"
 
 UCLASS()
@@ -18,6 +20,9 @@ public:
 	AFlier();
 
 	UPROPERTY(EditAnywhere)
+	UFloatingPawnMovement* Movement;
+
+	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* CubeMesh;
 
 	UPROPERTY(EditAnywhere)
@@ -26,17 +31,31 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSubclassOf<ABasicProjectile> ProjectileBlueprint;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<AHomingProjectile> HomingProjectileBlueprint;
+
 	UPROPERTY(EditAnywhere)
 	float FireDelay;
 
 	UPROPERTY(EditAnywhere)
 	float SlowdownMultiplier;
 
+	UPROPERTY(EditAnywhere)
+	float FocusedFireMultiplier;
+
+	UPROPERTY(EditAnywhere)
+	float BaseSpeed;
+
+	UPROPERTY(EditAnywhere)
+	int MaxFireLevel;
+
 protected:
 	bool IsFiring;
 	float LastFire;
 
 	bool Slowdown;
+
+	int FireLevel;
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -56,6 +75,11 @@ protected:
 	void EnableSlowdown();
 	void DisableSlowdown();
 
-	void Fire();
+	void DEBUG_IncreaseFireLevel();
+	void DEBUG_DecreaseFireLevel();
+
+	void Fire(bool Homing = false);
+
+	void SideFire(float RotOffset, float PosOffset, bool Homing = false);
 
 };
