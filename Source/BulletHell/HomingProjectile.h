@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "BasicProjectile.h"
 #include "Enemy/EnemyBase.h"
+#include "Engine/Classes/Components/StaticMeshComponent.h"
 #include "HomingProjectile.generated.h"
 
 /**

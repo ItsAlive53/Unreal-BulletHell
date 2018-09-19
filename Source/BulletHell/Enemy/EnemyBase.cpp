@@ -1,6 +1,8 @@
 
 
 #include "EnemyBase.h"
+#include "BulletHellGameStateBase.h"
+#include "Engine/World.h"
 
 
 // Sets default values
@@ -17,15 +19,6 @@ void AEnemyBase::BeginPlay() {
 
 }
 
-void AEnemyBase::FinishDestroy() {
-	if (GEngine) {
-		FString Out = "Enemy destroy test";
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, *Out);
-	}
-
-	Super::FinishDestroy();
-}
-
 // Called every frame
 void AEnemyBase::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
@@ -33,9 +26,10 @@ void AEnemyBase::Tick(float DeltaTime) {
 }
 
 void AEnemyBase::Die() {
-	BeginDestroy();
+	ABulletHellGameStateBase* Gamestate = (ABulletHellGameStateBase*)GetWorld()->GetGameState();
+	Gamestate->IncrementScore();
 
-	FinishDestroy();
+	Destroy();
 }
 
 void AEnemyBase::Damage() {

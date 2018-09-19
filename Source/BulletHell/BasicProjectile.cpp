@@ -1,6 +1,7 @@
 
 
 #include "BasicProjectile.h"
+#include "Enemy/EnemyBase.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 
@@ -26,5 +27,19 @@ void ABasicProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	TArray<AActor*> Overlapped;
+	GetOverlappingActors(Overlapped, AEnemyBase::StaticClass());
+
+	if (Overlapped.IsValidIndex(0)) {
+		if (GEngine) {
+			FString Out = "internal screaming";
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, *Out);
+		}
+
+		AEnemyBase* Enemy = (AEnemyBase*)Overlapped[0];
+		Enemy->Damage();
+
+		Destroy();
+	}
 }
 
