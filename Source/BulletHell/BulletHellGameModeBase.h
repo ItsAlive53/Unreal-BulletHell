@@ -13,8 +13,9 @@ UCLASS()
 class BULLETHELL_API ABulletHellGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
-	
-	
+
+public:
+
+	ABulletHellGameModeBase();	
 	
 };

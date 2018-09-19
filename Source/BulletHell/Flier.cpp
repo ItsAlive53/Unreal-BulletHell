@@ -89,7 +89,7 @@ void AFlier::EnableFire() {
 
 void AFlier::DisableFire() {
 	IsFiring = false;
-	LastFire = 0.f; // Let player fire semi-auto as fast as they pull the trigger
+	// LastFire = 0.f; // Let player fire semi-auto as fast as they pull the trigger
 }
 
 void AFlier::EnableSlowdown() {
@@ -151,20 +151,15 @@ void AFlier::Fire(bool Homing) {
 		}
 
 		if (FireLevel >= 1) {
-			SideFire(15.f, 50.f);
+			SideFire(15.f, 50.f, FireLevel >= 4 ? true : false);
 		}
 
 		if (FireLevel >= 2) {
-			SideFire(7.5f, 25.f);
-			SideFire(22.5f, 75.f);
+			SideFire(7.5f, 25.f, FireLevel >= 4 ? true : false);
 		}
 
 		if (FireLevel >= 3) {
-			SideFire(30.f, 100.f);
-		}
-
-		if (FireLevel == 4) {
-			SideFire(90.f, 0.f, true);
+			SideFire(90.f, 0.f, FireLevel >= 3 ? true : false);
 		}
 
 		LastFire = CurrentTime;

@@ -2,6 +2,7 @@
 
 #include "BulletHellGameModeBase.h"
 
-
+ABulletHellGameModeBase::ABulletHellGameModeBase() {
+}
 
 
