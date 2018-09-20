@@ -18,6 +18,9 @@ public:
 
 	AWallEnemy();
 
+	UPROPERTY(EditAnywhere)
+	float ScaleMultiplier;
+
 	virtual void Damage() override;
 	
 	
