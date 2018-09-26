@@ -40,3 +40,7 @@ void AEnemyBase::Damage() {
 	}
 }
 
+void AEnemyBase::SetHP(float HP) {
+	this->HP = HP;
+}
+

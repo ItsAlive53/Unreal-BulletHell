@@ -28,5 +28,6 @@ public:
 
 	void Die();
 	virtual void Damage();
+	void SetHP(float HP);
 	
 };

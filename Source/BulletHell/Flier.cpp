@@ -18,6 +18,10 @@ AFlier::AFlier() {
 
 	Camera = CreateDefaultSubobject<UCameraComponent>("Camera");
 
+	SetRootComponent(CubeMesh);
+
+	SetActorEnableCollision(true);
+
 	IsFiring = false;
 	LastFire = 0.f;
 	FireDelay = .5f;
@@ -30,7 +34,7 @@ AFlier::AFlier() {
 
 	FireLevel = 0;
 
-	MaxFireLevel = 4;
+	MaxFireLevel = 3;
 
 }
 
@@ -150,16 +154,17 @@ void AFlier::Fire(bool Homing) {
 			}
 		}
 
+		// TODO: Improve this
 		if (FireLevel >= 1) {
-			SideFire(15.f, 50.f, FireLevel >= 4 ? true : false);
+			SideFire(10.f, 50.f);
 		}
 
 		if (FireLevel >= 2) {
-			SideFire(7.5f, 25.f, FireLevel >= 4 ? true : false);
+			SideFire(5.f, 25.f);
 		}
 
 		if (FireLevel >= 3) {
-			SideFire(90.f, 0.f, FireLevel >= 3 ? true : false);
+			SideFire(45.f, 0.f, true);
 		}
 
 		LastFire = CurrentTime;
