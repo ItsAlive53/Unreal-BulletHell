@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
-#include "BulletHellHUD.generated.h"
 #include "HUD/HealthBar.h"
+#include "BulletHellHUD.generated.h"
 
 /**
  * 

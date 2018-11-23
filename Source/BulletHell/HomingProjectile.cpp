@@ -6,17 +6,19 @@
 
 AHomingProjectile::AHomingProjectile() {
 	ProjectileMovement->bIsHomingProjectile = (uint32)1;
+
+	EnemyBaseClass = AEnemyBase::StaticClass();
 }
 
 void AHomingProjectile::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
 	ProjectileMovement->HomingAccelerationMagnitude = ProjectileMovement->InitialSpeed * 10.f;
-
+	
 	if (ProjectileMovement->HomingTargetComponent.Get() == NULL) {
 		TArray<AActor*> Enemies;
 
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AEnemyBase::StaticClass(), Enemies);
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), EnemyBaseClass, Enemies);
 
 		if (Enemies.Num() == 0) return;
 

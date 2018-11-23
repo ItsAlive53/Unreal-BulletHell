@@ -19,6 +19,9 @@ class BULLETHELL_API AHomingProjectile : public ABasicProjectile
 public:
 
 	AHomingProjectile();
+
+	UPROPERTY(EditAnywhere)
+	UClass* EnemyBaseClass;
 	
 	virtual void Tick(float DeltaTime) override;
 
